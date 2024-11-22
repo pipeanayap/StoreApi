@@ -25,6 +25,7 @@ jobs:
         run: |
           docker push pipeanayaparada/api_tienda:${{ github.sha }}
           docker push pipeanayaparada/api_tienda:latest
+          
 
   # deploy:
   #   - name: Connect to server
