@@ -1,0 +1,36 @@
+name: Build and push docker image
+
+on:
+  push:
+    branches:
+      - 'master'
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4 
+
+      - name: Login to DockerHub
+        run: docker login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}"
+
+      - name: Build docker image
+        run: docker build -t pipeanayaparada/api_tienda:${{ github.sha }} .
+
+      - name: Tag latest
+        run: docker tag pipeanayaparada/api_tienda:${{github.sha}} pipeanayaparada/api_tienda:latest
+
+      - name: Push docker image
+        run: |
+          docker push pipeanayaparada/api_tienda:${{ github.sha }}
+          docker push pipeanayaparada/api_tienda:latest
+
+  # deploy:
+  #   - name: Connect to server
+  #     run: ssh -i ${{ secrets.SSH_KEY }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
+      
+
+      # - name: Notificar estado
+      #   if: always()
+      #   run: echo "El pipeline finalizó con el estado \:\ ${{ job.status }}"
