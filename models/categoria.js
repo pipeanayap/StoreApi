@@ -9,13 +9,7 @@ const categoriaSchema = new Schema({
     descripcion: {
         type: String,
         required: true
-    },
-    productos: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Producto'
-        }
-    ]
+    }
 });
 
 const Categoria = mongoose.model('Categoria', categoriaSchema, 'categorias');
