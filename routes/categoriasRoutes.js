@@ -54,7 +54,7 @@ router.post('/categorias', async (req, res) => {
             res.json(categoria);
         })
         .catch((error) => {
-            res.status(400).send(err);
+            res.status(400).send(error);
 });
 
 });

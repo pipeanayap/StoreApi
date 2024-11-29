@@ -61,41 +61,69 @@ router.put('/usuarios/:id', (req, res) => {
 });
 
 router.post('/usuarios', async (req, res) => {
-    const { correo, contrasena, telefono, direccionEntrega, roles, facturacion } = req.body;
-
-    // Verificar si ya existe un usuario con el correo proporcionado
-    const usuarioExistente = await Usuario.findOne({ correo });
-    if (usuarioExistente) {
-        return res.status(400).json({ mensaje: 'Ya existe un usuario con ese correo' });
-    }
+    const { correo, contrasena, telefono, direccionEntrega, facturacion } = req.body;
 
     try {
+        // Verificar si ya existe un usuario con el correo proporcionado
+        const usuarioExistente = await Usuario.findOne({ correo });
+        if (usuarioExistente) {
+            return res.status(400).json({ mensaje: 'Ya existe un usuario con ese correo' });
+        }
+
+        // Clasificar el rol basado en el correo
+        const rol = correo.endsWith('@admin.com') ? 'admin' : 'usuario';
+
         // Hashear la contraseña
-        const salt = await bcrypt.genSalt(10); // Creamos el salt
-        const hashedPassword = await bcrypt.hash(contrasena, salt); // Hasheamos la contraseña
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(contrasena, salt);
 
         // Crear el nuevo usuario con los datos recibidos en la solicitud
         const usuario = new Usuario({
             correo,
-            contrasena: hashedPassword, // Asignamos la contraseña hasheada
+            contrasena: hashedPassword,
             telefono,
-            direccionEntrega,
-            roles: roles || ['cliente'], // Si no se especifican roles, se asigna 'cliente' por defecto
-            facturacion,
-            activo: true // Establecemos el usuario como activo por defecto
+            direccionEntrega: direccionEntrega || {}, // Si no se proporciona, asignar un objeto vacío
+            facturacion: facturacion || {}, // Si no se proporciona, asignar un objeto vacío
+            roles: [rol], // Asignar el rol automáticamente
+            activo: true
         });
 
         // Guardamos el usuario en la base de datos
         await usuario.save();
 
         // Respondemos con el usuario creado
-        res.json(usuario);
+        res.status(201).json({ mensaje: 'Usuario registrado exitosamente.', usuario });
     } catch (error) {
-        console.error("Error al crear usuario:", error); // Log de error
-        res.status(400).send(error);
+        console.error('Error al crear usuario:', error);
+        res.status(500).json({ mensaje: 'Error interno al registrar el usuario.' });
+    }
+});
+
+
+// Ruta para inicio de sesión
+router.post('/login', async (req, res) => {
+    const { correo, contrasena } = req.body;
+
+    try {
+        // Buscar usuario por correo
+        const usuario = await Usuario.findOne({ correo });
+        if (!usuario) {
+            return res.status(404).json({ mensaje: "Usuario no encontrado" });
+        }
+
+        // Verificar la contraseña
+        const esValida = await bcrypt.compare(contrasena, usuario.contrasena);
+        if (!esValida) {
+            return res.status(401).json({ mensaje: "Contraseña incorrecta" });
+        }
+
+        // Devolver el rol del usuario
+        res.status(200).json({ mensaje: "Inicio de sesión exitoso", rol: usuario.roles[0] });
+    } catch (error) {
+        console.error("Error en inicio de sesión:", error);
+        res.status(500).json({ mensaje: "Error interno del servidor" });
     }
 });
 
 
 export default router;
-
