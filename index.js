@@ -14,8 +14,6 @@ app.use(cors());
 app.set('view engine', 'ejs');
 app.engine('ejs', ejs.__express);
 
-
-
 mongoose.connect(conexion)
     .then(() => {
         console.log('Conectado a la base de datos')
@@ -33,5 +31,7 @@ app.use(productosRoutes);
 app.use(categoriasRoutes);
 app.use(usuariosRoutes);
 app.use(documentacionRoutes);
+
+//
 
 

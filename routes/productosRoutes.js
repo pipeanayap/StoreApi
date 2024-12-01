@@ -10,7 +10,7 @@ router.use(bodyParser.json()); // Para que pueda parsear application/json
 // Obtener todos los productos
 router.get('/productos', async (req, res) => {
     try {
-        const productos = await Producto.find().populate('categorias', 'nombre -_id'); // Usando 'categorias'
+        const productos = await Producto.find().populate('categoriasProducto', 'nombre -_id');
         res.json(productos);
     } catch (error) {
         res.status(500).json({ mensaje: 'Error al obtener productos', error });
@@ -20,7 +20,7 @@ router.get('/productos', async (req, res) => {
 // Obtener un producto por ID
 router.get('/productos/:id', async (req, res) => {
     try {
-        const producto = await Producto.findById(req.params.id).populate('categorias', 'nombre -_id'); // Usando 'categorias'
+        const producto = await Producto.findById(req.params.id).populate('categoriasProducto', 'nombre -_id');
         if (!producto) {
             return res.status(404).json({ mensaje: 'Producto no encontrado' });
         }
@@ -43,12 +43,12 @@ router.delete('/productos/:id', async (req, res) => {
 // Actualizar un producto
 router.put('/productos/:id', async (req, res) => {
     try {
-        const { nombre, precio, categorias, imagenes } = req.body;
+        const { nombre, precio, categoriasProducto, imagenes } = req.body;
 
         let categoriasIds;
-        if (categorias) {
-            categoriasIds = await Categoria.find({ nombre: { $in: categorias } }, '_id');
-            if (categoriasIds.length !== categorias.length) {
+        if (categoriasProducto) {
+            categoriasIds = await Categoria.find({ nombre: { $in: categoriasProducto } }, '_id');
+            if (categoriasIds.length !== categoriasProducto.length) {
                 return res.status(400).json({ mensaje: 'Algunas categorías no existen en la base de datos' });
             }
         }
@@ -57,7 +57,7 @@ router.put('/productos/:id', async (req, res) => {
             ...(nombre && { nombre }),
             ...(precio && { precio }),
             ...(imagenes && { imagenes }),
-            ...(categorias && { categorias: categoriasIds.map(cat => cat._id) }) // Usando 'categorias'
+            ...(categoriasProducto && { categoriasProducto: categoriasIds.map(cat => cat._id) })
         };
 
         const productoActualizado = await Producto.updateOne({ _id: req.params.id }, actualizacion);
@@ -74,22 +74,22 @@ router.put('/productos/:id', async (req, res) => {
 // Crear un producto
 router.post('/productos', async (req, res) => {
     try {
-        const { nombre, precio, categorias, imagenes } = req.body;
+        const { nombre, precio, categoriasProducto, imagenes } = req.body;
 
-        const categoriasIds = await Categoria.find({ nombre: { $in: categorias } }, '_id');
-        if (categoriasIds.length !== categorias.length) {
+        const categoriasIds = await Categoria.find({ nombre: { $in: categoriasProducto } }, '_id');
+        if (categoriasIds.length !== categoriasProducto.length) {
             return res.status(400).json({ mensaje: 'Algunas categorías no existen' });
         }
 
         const producto = new Producto({
             nombre,
             precio,
-            categorias: categoriasIds.map(cat => cat._id), // Usando 'categorias'
+            categoriasProducto: categoriasIds.map(cat => cat._id),
             imagenes
         });
 
         await producto.save();
-        res.json(await Producto.findById(producto._id).populate('categorias', 'nombre'));
+        res.json(await Producto.findById(producto._id).populate('categoriasProducto', 'nombre'));
     } catch (error) {
         res.status(500).json({ mensaje: 'Error al crear producto', error });
     }

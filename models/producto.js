@@ -10,7 +10,7 @@ const productosSchema = new Schema({
         type: Number,
         required: true
     },
-    categorias: [
+    categoriasProducto: [
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Categoria'
